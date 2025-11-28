@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CTF – Challenge Pack Documentation (with Solutions)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            margin: 2rem;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+        
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: #fbbf24;
+        }
+        
+        a {
+            color: #60a5fa;
+        }
+        
+        code {
+            font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background: rgba(148, 163, 184, 0.15);
+            padding: 0.1rem 0.25rem;
+            border-radius: 0.25rem;
+        }
+        
+        pre {
+            background: #020617;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid #374151;
+            margin: 2rem 0;
+        }
+        
+        ul {
+            padding-left: 1.2rem;
+        }
+        
+        li {
+            margin: 0.15rem 0;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #020617;
+            padding: 2rem 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+            border: 1px solid #1f2937;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border: 1px solid #4b5563;
+            color: #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>CTF – Challenge Pack Documentation (with Solutions)</h1>
+        <p>This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (<code>index.php</code>, <code>config.php</code>, <code>YellowStorm1701.php</code>, <code>EndOfLine.php</code>)
+            are the authoritative implementation; this document describes the intended design and how to solve each challenge.</p>
+
+        <hr>
+
+        <h2>Challenge 1 — Login Bypass (SQL Injection)</h2>
+        <p><span class="badge">Category</span> Injection / SQLi</p>
+
+        <h3>Files</h3>
+        <ul>
+            <li><code>index.php</code></li>
+            <li><code>config.php</code></li>
+        </ul>
+
+        <h3>Description</h3>
+        <p>This challenge presents a simple login page with username and password fields. Credentials are validated against a database using an intentionally unsafe SQL statement constructed via direct concatenation:</p>
+
+        <pre><code>$sql = "SELECT id FROM users
+        WHERE username = '$username'
+          AND password = '$password'
+        LIMIT 1";</code></pre>
+
+        <p>On successful authentication, <code>index.php</code> sets a session flag and displays the first flag defined in <code>config.php</code>:</p>
+
+        <pre><code>$FLAG = 'FLAG{YellowStorm1701.php}';</code></pre>
+
+        <h3>Objective</h3>
+        <p>Obtain the first flag by bypassing authentication <strong>without</strong> knowing valid credentials.</p>
+
+        <h3>Constraints</h3>
+        <ul>
+            <li>The application is intentionally insecure and should not be hardened.</li>
+            <li>No rate-limiting or brute-force protection is implemented.</li>
+            <li>User input is directly embedded into the SQL query.</li>
+        </ul>
+
+        <h3>How to Solve (Step-by-Step)</h3>
+
+        <ol>
+            <li>
+                <p>Open the login page (<code>index.php</code>) in your browser.</p>
+            </li>
+            <li>
+                <p>Enter any value as the username, for example:</p>
+                <pre><code>Username: test</code></pre>
+            </li>
+            <li>
+                <p>In the password field, enter a classic SQL injection payload that turns the <code>WHERE</code> clause into a tautology. For example:</p>
+                <pre><code>Password: ' OR ''='</code></pre>
+                <p>This produces an SQL statement similar to:</p>
+                <pre><code>SELECT id FROM users
+WHERE username = 'test'
+  AND password = '' OR ''=''
+LIMIT 1;</code></pre>
+                <p>Due to operator precedence, this is interpreted as:</p>
+                <pre><code>(username = 'test' AND password = '')
+ OR ''=''</code></pre>
+                <p>The condition <code>''=''</code> is always true, so the query returns at least one row and the login check passes.</p>
+            </li>
+            <li>
+                <p>Submit the form. If the injection succeeds, the page will mark you as logged in and display the first flag:</p>
+                <pre><code>FLAG{YellowStorm1701.php}</code></pre>
+            </li>
+            <li>
+                <p>The flag string looks like a file name. The next challenge uses a file named <code>YellowStorm1701.php</code>, hinting that this flag value is also the entry point for Challenge 2.</p>
+            </li>
+        </ol>
+
+        <h3>Learning Points</h3>
+        <ul>
+            <li>Why building SQL strings via concatenation is unsafe.</li>
+            <li>How boolean logic and operator precedence in SQL can be abused to bypass login checks.</li>
+            <li>How prepared statements and parameterized queries mitigate SQL injection.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Challenge 2 — Role Escalation via Cookie Tampering</h2>
+        <p><span class="badge">Category</span> Broken Access Control / AuthZ Bypass</p>
+
+        <h3>Files</h3>
+        <ul>
+            <li><code>YellowStorm1701.php</code></li>
+        </ul>
+
+        <h3>Description</h3>
+        <p>After completing the login challenge, the user is expected to access <code>YellowStorm1701.php</code>. This page:</p>
+        <ul>
+            <li>Reads the username and role from client-side cookies:</li>
+        </ul>
+
+        <pre><code>$username = $_COOKIE['username'] ?? null;
+$role     = $_COOKIE['role'] ?? null;</code></pre>
+
+        <ul>
+            <li>Checks access based solely on the value of <code>$role</code>.</li>
+            <li>Defines a second flag:</li>
+        </ul>
+
+        <pre><code>$FLAG2 = 'FLAG{EndOfLine.php}';</code></pre>
+
+        <p>The visible behavior is:</p>
+        <ul>
+            <li>If <code>username</code> or <code>role</code> cookie is missing: “Access denied. Login at index.php”.</li>
+            <li>If cookies are present but <code>role !== 'admin'</code>: shows your current role and “Your permission level is insufficient.”</li>
+            <li>If <code>role === 'admin'</code>: displays the second flag and welcomes you as admin.</li>
+        </ul>
+
+        <p>The page trusts the cookie values completely; there is no server-side validation beyond reading what the browser sends.</p>
+
+        <h3>Objective</h3>
+        <p>Obtain administrative access by manipulating cookies and retrieve the second flag.</p>
+
+        <h3>Constraints</h3>
+        <ul>
+            <li>No cryptographic signing or verification of cookies.</li>
+            <li>No server-side cross-check with a database for the user’s role.</li>
+            <li>All authorization decisions are made directly from client-controlled data.</li>
+        </ul>
+
+        <h3>How to Solve (Step-by-Step)</h3>
+
+        <ol>
+            <li>
+                <p>Ensure some cookies exist by first visiting <code>index.php</code> and logging in (using any credentials or the injection from Challenge 1). Depending on your server configuration, this may set <code>username</code> and/or <code>role</code>                    cookies, or you can create them manually.</p>
+            </li>
+            <li>
+                <p>Navigate to <code>YellowStorm1701.php</code>. Observe one of the following:</p>
+                <ul>
+                    <li>“Access denied. Login at index.php” → no cookies were found.</li>
+                    <li>“Your permission level is insufficient.” → a non-admin role is present.</li>
+                </ul>
+            </li>
+            <li>
+                <p>Open your browser’s developer tools:</p>
+                <ul>
+                    <li>In Chrome/Edge: <code>F12</code> → <strong>Application</strong> tab → <strong>Cookies</strong>.</li>
+                    <li>In Firefox: <code>F12</code> → <strong>Storage</strong> tab → <strong>Cookies</strong>.</li>
+                </ul>
+            </li>
+            <li>
+                <p>Locate the cookies for your CTF origin (host/port). Create or modify the following:</p>
+                <pre><code>Cookie name:  username
+Cookie value: any-non-empty-string (e.g. testuser)
+
+Cookie name:  role
+Cookie value: admin</code></pre>
+                <p>If <code>role</code> already exists with value <code>user</code> or similar, just change it to <code>admin</code>.</p>
+            </li>
+            <li>
+                <p>Reload <code>YellowStorm1701.php</code>. With <code>role=admin</code>, the page will now treat you as an administrator and display:</p>
+                <pre><code>FLAG{EndOfLine.php}</code></pre>
+            </li>
+            <li>
+                <p>The second flag itself looks like another file name. Visiting <code>EndOfLine.php</code> will show the final “You did it, there are no more hackits” message, confirming completion of the entire chain.</p>
+            </li>
+        </ol>
+
+        <h3>Learning Points</h3>
+        <ul>
+            <li>Why client-side state (cookies, localStorage, etc.) must never be trusted for authorization decisions.</li>
+            <li>The difference between authentication (who you are) and authorization (what you may do).</li>
+            <li>Why robust systems use server-side role checks and/or signed, tamper-evident tokens (e.g. JWT with proper verification).</li>
+        </ul>
+
+        <hr>
+
+        <h2>General Notes</h2>
+
+        <h3>Reset Functionality</h3>
+        <p>All challenge pages include or can easily include a reset option that clears session state and cookies (for example via a <code>?reset=1</code> parameter) to allow a clean restart without closing the browser.</p>
+
+        <h3>Recommended Tools</h3>
+        <ul>
+            <li>Browser Developer Tools (Network / Application / Storage tabs)</li>
+            <li>Cookie and header editors for manual tampering</li>
+        </ul>
+
+        <hr>
+
+    </div>
+</body>
+
+</html>
