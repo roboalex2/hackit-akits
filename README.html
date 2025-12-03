@@ -79,8 +79,8 @@
 <body>
     <div class="container">
         <h1>CTF – Challenge Pack Documentation (with Solutions)</h1>
-        <p>This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (<code>index.php</code>, <code>config.php</code>, <code>YellowStorm1701.php</code>, <code>EndOfLine.php</code>)
-            are the authoritative implementation; this document describes the intended design and how to solve each challenge.</p>
+        <p>This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (<code>index.php</code>, <code>loginSql.php</code>, <code>config.php</code>, <code>YellowStorm1701.php</code>,
+            <code>EndOfLine.php</code>) are the authoritative implementation; this document describes the intended design and how to solve each challenge.</p>
 
         <hr>
 
@@ -89,7 +89,7 @@
 
         <h3>Files</h3>
         <ul>
-            <li><code>index.php</code></li>
+            <li><code>loginSql.php</code></li>
             <li><code>config.php</code></li>
         </ul>
 
@@ -101,7 +101,7 @@
           AND password = '$password'
         LIMIT 1";</code></pre>
 
-        <p>On successful authentication, <code>index.php</code> sets a session flag and displays the first flag defined in <code>config.php</code>:</p>
+        <p>On successful authentication, <code>loginSql.php</code> sets a session flag and displays the first flag defined in <code>config.php</code>:</p>
 
         <pre><code>$FLAG = 'FLAG{YellowStorm1701.php}';</code></pre>
 
@@ -119,7 +119,7 @@
 
         <ol>
             <li>
-                <p>Open the login page (<code>index.php</code>) in your browser.</p>
+                <p>Open the login page (<code>loginSql.php</code>) in your browser.</p>
             </li>
             <li>
                 <p>Enter any value as the username, for example:</p>
@@ -182,7 +182,7 @@ $role     = $_COOKIE['role'] ?? null;</code></pre>
 
         <p>The visible behavior is:</p>
         <ul>
-            <li>If <code>username</code> or <code>role</code> cookie is missing: “Access denied. Login at index.php”.</li>
+            <li>If <code>username</code> or <code>role</code> cookie is missing: “Access denied. Login at loginSql.php”.</li>
             <li>If cookies are present but <code>role !== 'admin'</code>: shows your current role and “Your permission level is insufficient.”</li>
             <li>If <code>role === 'admin'</code>: displays the second flag and welcomes you as admin.</li>
         </ul>
@@ -203,12 +203,12 @@ $role     = $_COOKIE['role'] ?? null;</code></pre>
 
         <ol>
             <li>
-                <p>Ensure some cookies exist by first visiting <code>index.php</code> and logging in (using any credentials or the injection from Challenge 1). Depending on your server configuration, this may set <code>username</code> and/or <code>role</code>                    cookies, or you can create them manually.</p>
+                <p>Ensure some cookies exist by first visiting <code>loginSql.php</code> and logging in (using any credentials or the injection from Challenge 1). Depending on your server configuration, this may set <code>username</code> and/or <code>role</code>                    cookies, or you can create them manually.</p>
             </li>
             <li>
                 <p>Navigate to <code>YellowStorm1701.php</code>. Observe one of the following:</p>
                 <ul>
-                    <li>“Access denied. Login at index.php” → no cookies were found.</li>
+                    <li>“Access denied. Login at loginSql.php” → no cookies were found.</li>
                     <li>“Your permission level is insufficient.” → a non-admin role is present.</li>
                 </ul>
             </li>

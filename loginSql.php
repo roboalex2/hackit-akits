@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card">
     <?php if (!$loggedIn): ?>
         <h1>HackIt Login</h1>
-        <p class="subtitle">Log in to reveal the first flag.</p>
+        <p class="subtitle">Log in to reveal the flag.</p>
 
         <?php if (!empty($error)): ?>
             <div class="error">

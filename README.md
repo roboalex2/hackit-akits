@@ -1,6 +1,6 @@
 # CTF – Challenge Pack Documentation (with Solutions)
 
-This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (`ìndex.php` `loginSql.php`, `config.php`, `YellowStorm1701.php`, `EndOfLine.php`) are the authoritative implementation; this document describes the intended design and how to solve each challenge.
+This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (`index.php` `loginSql.php`, `config.php`, `YellowStorm1701.php`, `EndOfLine.php`) are the authoritative implementation; this document describes the intended design and how to solve each challenge.
 
 ---
 
@@ -24,7 +24,7 @@ $sql = "SELECT id FROM users
         LIMIT 1";
 ```
 
-On successful authentication, `index.php` sets a session flag and displays the first flag defined in `config.php`:
+On successful authentication, `loginSql.php` sets a session flag and displays the first flag defined in `config.php`:
 
 ```php
 $FLAG = 'FLAG{YellowStorm1701.php}';
