@@ -1,6 +1,6 @@
 # CTF – Challenge Pack Documentation (with Solutions)
 
-This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (`index.php`, `config.php`, `YellowStorm1701.php`, `EndOfLine.php`) are the authoritative implementation; this document describes the intended design and how to solve each challenge.
+This repository contains two intentionally vulnerable web challenges designed for training and Capture-the-Flag exercises. The uploaded PHP files (`ìndex.php` `loginSql.php`, `config.php`, `YellowStorm1701.php`, `EndOfLine.php`) are the authoritative implementation; this document describes the intended design and how to solve each challenge.
 
 ---
 
@@ -10,7 +10,7 @@ This repository contains two intentionally vulnerable web challenges designed fo
 
 ### Files
 
-- `index.php`
+- `loginSql.php`
 - `config.php`
 
 ### Description
@@ -36,7 +36,7 @@ Obtain the first flag by bypassing authentication **without** knowing valid cred
 
 ### How to Solve
 
-1. Open `index.php`.
+1. Open `loginSql.php`.
 2. Enter any username.
 3. Use the following payload as password:
 
